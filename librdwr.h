@@ -1,6 +1,6 @@
 /*
-В библиотеке мы, ясен пень, объявляем функции, а также некоторые структуры, которые нам понадобятся
-позже.
+В библиотеке мы, ясен пень, объявляем функции
+Ненужные нам я стёрла к чертям собачим
 */
 
 #pragma once 	// Препроцессорная директива, разработанная для контроля за тем, чтобы 
@@ -20,37 +20,5 @@
 #include <pwd.h>
 #include <errno.h>
 #include <dirent.h>
-
-#define VAL_NUM 968
-
-char* readBuf(int fd, char* message, int size);
-void writeBuf(int fd, char* message, int size);
-
-typedef struct message
-{
-    long mtype;
-    int val[VAL_NUM];
-    int str;
-    int strnum;
-    int numb;
-}connect2;
-
-typedef struct threadarg
-{
-    long mtype;
-    int* val;
-    int str;
-    int strnum;
-    int id;
-    int numb;
-    int clnum;
-}threadarg;
-
-typedef struct mes1
-{
-    long mtype;
-    char text[60];
-    int numb;
-}connect1;
 
 char* intochar(int num);
