@@ -1,0 +1,12 @@
+Сначала как обычно:
+
+gcc -Wall -c -o libbuf.o libbuf.c
+ar rcs libbuf.a libbuf.o
+gcc -Wall -c dispatcher.c -o dispatcher.o
+gcc -o dispatcher dispatcher.o -L. -lbuf
+gcc -Wall -c stat_rd.c -o stat_rd.o
+gcc -o stat_rd stat_rd.o -L. -lbuf
+gcc -Wall -c stat_wr.c -o stat_wr.o
+gcc -o stat_wr stat_wr.o -L. -lbuf
+
+Далее запускаем ./dispatcher
