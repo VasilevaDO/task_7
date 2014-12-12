@@ -1,59 +1,56 @@
-#include "libbuf.h"
+#include "librdwr.h"
 
-#define FILE "mmap.dat"
-#define RESULT "Work done\n"
+#define FILE_SIZE 1024*1024 
 
-void func(int signo) {}
+//надо переделать то, что сверху
 
-int main(int argc, char *argv[]) 
+void p(int signo) {}
+
+int main(int argc, char** argv)
 {
-	sigset_t set;	
-	struct sigaction act;
-	act.sa_handler = func;
-	sigfillset(&act.sa_mask);
-	sigaction(SIGUSR1, &act, NULL);
-	sigemptyset(&set);
-	sigsuspend(&set);
+    int fd = open("mmap.dat", O_CREAT | O_RDWR, 0666); //создаём или открываем файл mmap.dat
+    if(fd < 0)
+    {
+        printf("Сan't create/open file\n");
+        exit(-1);
+    }
 
-	int fd;
-	if((fd = open(FILE, O_RDWR)) < 0) 
-	{
-		printf("Can't open a file\n");
-		exit(-1);
-	}
-	
-	size_t length;
-	length = lseek(fd, 0, SEEK_END);
-	lseek(fd, 0, SEEK_SET);
+    char* recieve = mmap(NULL, FILE_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0); 
+//отображаем его в оперативку как в предыдущей проге (см. stat_wr)
+    if(recieve == MAP_FAILED )
+    {
+        printf("Mapping failed!\n");
+    }
+/*
+В последуюших 7 строчках мы ждём сигнала от первой проги, разрешающего нам работать.
+Функции работы с сигналами полностью слизаны лекций, так что оно всё работает так, как надо
+*/
+    sigset_t set;
 
-	int length_res;
-	length_res = (length + strlen(RESULT)) * sizeof(char);
+    struct sigaction sigact;
+    sigact.sa_handler = p;
+    sigfillset(&sigact.sa_mask);
+    sigaction(SIGUSR1, &sigact, NULL);
+    sigemptyset(&set);
+    sigsuspend(&set);
+//нам нужен (а нахрена, кстати? без него можно) размер файла mmap.dat
+    struct stat* buf = (struct stat*)calloc(1, sizeof(struct stat));
 
-	if(ftruncate(fd, length_res) < 0) 
-	{
-		printf("Can't resize the file\n");
-		exit(-1);
-	}
-
-	char *ptr;
-	if((ptr = (char *)mmap(NULL, length_res, PROT_WRITE, MAP_SHARED, fd, 0)) == MAP_FAILED) 
-	{
-		printf("Can't mmap a file\n");
-		exit(-1);
-	}
-
-	if(close(fd) < 0) 
-	{
-		printf("Can't close the file\n");
-	}
-
-	char *tmp_ptr;
-	tmp_ptr = ptr;
-	strcat(tmp_ptr, RESULT);
-
-	if(munmap((void *)ptr, length_res) < 0) 
-	{
-		printf("Can't stop mapping\n");
-		exit(-1);
-	}
+    if(stat("mmap.dat"
+            , buf) < 0)
+    {
+        printf("problem\n");
+        exit(-1);
+    }
+//Пишем в mmap.dat коронную фразу и победоносно вылетаем из проги с освобождением памяти.
+    strcat(recieve, "Work done\n");
+    //NMUNMAPPING AND CLOSING
+    if(munmap((void*)recieve, strlen(recieve)) < 0)
+    {
+        printf("mistake in manmap\n");
+        exit(-1);
+    }
+    close(fd);
+//Ура, товарищи!
 }
+
